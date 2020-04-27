@@ -1,9 +1,9 @@
 const store = {
   items: [
-    { id: cuid(), name: 'apples', checked: false },
-    { id: cuid(), name: 'oranges', checked: false },
-    { id: cuid(), name: 'milk', checked: true },
-    { id: cuid(), name: 'bread', checked: false }
+    { id: cuid(), name: 'apples', checked: false, editing: false },
+    { id: cuid(), name: 'oranges', checked: false, editing: false },
+    { id: cuid(), name: 'milk', checked: true, editing: false },
+    { id: cuid(), name: 'bread', checked: false, editing: false }
   ],
   hideCheckedItems: false
 };
@@ -13,6 +13,18 @@ const generateItemElement = function (item) {
   if (!item.checked) {
     itemTitle = `
      <span class='shopping-item'>${item.name}</span>
+    `;
+  }
+
+  if (item.editing) {
+    itemTitle = `
+    <input type='text' class='item-edit-textbox' placeholder='${item.name}' class='shopping-item'></input>
+    <button class='js-edit-confirm'>
+      <span class='button-label'>save</span>
+    </button>
+    <button class='js-edit-cancel'>
+      <span class='button-label'>cancel</span>
+    </button>
     `;
   }
 
@@ -76,15 +88,54 @@ const handleNewItemSubmit = function () {
   });
 };
 
+const saveEditForListItem = function (id, newName) {
+  const foundItem = store.items.find(item => item.id === id);
+  if (newName) {
+    foundItem.name = newName;
+  }
+  foundItem.editing = false;
+};
+
 const toggleCheckedForListItem = function (id) {
   const foundItem = store.items.find(item => item.id === id);
   foundItem.checked = !foundItem.checked;
+};
+
+const toggleEditForListItem = function (id) {
+  const foundItem = store.items.find(item => item.id === id);
+  foundItem.editing = !foundItem.editing;
+
 };
 
 const handleItemCheckClicked = function () {
   $('.js-shopping-list').on('click', '.js-item-toggle', event => {
     const id = getItemIdFromElement(event.currentTarget);
     toggleCheckedForListItem(id);
+    render();
+  });
+};
+
+const handleItemNameClicked = function () {
+  $('.js-shopping-list').on('click', 'span.shopping-item', event => {
+    const id = getItemIdFromElement(event.currentTarget);
+    toggleEditForListItem(id);
+    render();
+  });
+};
+
+const handleEditSaveClicked = function () {
+  $('.js-shopping-list').on('click', '.js-edit-confirm', event => {
+    const id = getItemIdFromElement(event.currentTarget);
+    let name = $('.item-edit-textbox').val();
+    saveEditForListItem(id, name);
+    render();
+  });
+};
+
+const handleEditCancelClicked = function () {
+  $('.js-shopping-list').on('click', '.js-edit-cancel', event => {
+    const id = getItemIdFromElement(event.currentTarget);
+    toggleEditForListItem(id);
     render();
   });
 };
@@ -158,7 +209,10 @@ const handleShoppingList = function () {
   render();
   handleNewItemSubmit();
   handleItemCheckClicked();
+  handleItemNameClicked();
   handleDeleteItemClicked();
+  handleEditCancelClicked();
+  handleEditSaveClicked();
   handleToggleFilterClick();
 };
 
